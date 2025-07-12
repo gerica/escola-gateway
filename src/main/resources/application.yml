@@ -1,0 +1,59 @@
+app:
+  description: Sistema de Gestão Escolar
+
+server:
+  port: 8080
+
+# Nome da aplicação, importante para o Service Discovery (Eureka)
+spring:
+  application:
+    name: federated-gateway
+
+  main:
+    web-application-type: reactive
+  # --- CONFIGURAÇÃO DO GATEWAY ---
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            # Rota para o subgraph de autenticação
+            - id: auth-service-route
+              uri: lb://AUTH-SERVICE
+              predicates:
+                - Path=/graphql
+              metadata:
+                graphql-subgraph: true
+
+  # Bloco de configuração do GraphQL CORRIGIDO
+  graphql:
+    http:
+      path: /graphql
+    graphiql:
+      enabled: true
+      path: /graphiql
+    federation:
+      enabled: true
+
+# Configuração do cliente Eureka. O Gateway precisa saber onde o servidor Eureka está.
+eureka:
+  client:
+    service-url:
+      # URL padrão do servidor Eureka. Você precisará de um serviço Eureka rodando.
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+    # Tenta se registrar a cada 5 segundos até conseguir
+    lease-renewal-interval-in-seconds: 5
+    # Se não conseguir renovar em 15s, o servidor pode removê-lo
+    lease-expiration-duration-in-seconds: 15
+    # Busca o registro de outros serviços a cada 10 segundos
+    registry-fetch-interval-seconds: 10
+  instance:
+    hostname: gateway
+    prefer-ip-address: true
+
+logging:
+  level:
+    # Mostra informações detalhadas sobre o processo de autenticação e autorização
+    org.springframework.security: DEBUG
+    # Mostra como o WebFlux (motor do Gateway) está lidando com as requisições
+    org.springframework.web.reactive: DEBUG
