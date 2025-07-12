@@ -8,22 +8,38 @@ server:
 spring:
   application:
     name: federated-gateway
-
   main:
     web-application-type: reactive
   # --- CONFIGURAÇÃO DO GATEWAY ---
   cloud:
+    loadbalancer:
+      enabled: true
     gateway:
       server:
         webflux:
           routes:
-            # Rota para o subgraph de autenticação
-            - id: auth-service-route
+            - id: auth-service-graphql
               uri: lb://AUTH-SERVICE
               predicates:
                 - Path=/graphql
               metadata:
                 graphql-subgraph: true
+            - id: auth-service-internal
+              uri: lb://AUTH-SERVICE
+              predicates:
+                - Path=/internal/auth/**
+            - id: graphiql
+              uri: no://op
+              predicates:
+                - Path=/graphiql
+  #            - id: client-service
+  #              uri: lb://CLIENT-SERVICE
+  #              predicates:
+  #                - Path=/internal/client/** # Caminho interno, nunca exposto ao cliente
+  #              metadata:
+  #                graphql-subgraph: true
+  #      handler-mapping:
+  #        order: 2
 
   # Bloco de configuração do GraphQL CORRIGIDO
   graphql:
@@ -51,9 +67,21 @@ eureka:
     hostname: gateway
     prefer-ip-address: true
 
+# No final do seu application.yml
+management:
+  endpoints:
+    web:
+      exposure:
+        # Expõe o endpoint 'mappings' para que possamos ver todas as rotas
+        include: mappings
+
+
 logging:
   level:
-    # Mostra informações detalhadas sobre o processo de autenticação e autorização
+    org.springframework.graphql: DEBUG
     org.springframework.security: DEBUG
-    # Mostra como o WebFlux (motor do Gateway) está lidando com as requisições
     org.springframework.web.reactive: DEBUG
+    org.springframework.cloud.loadbalancer: DEBUG
+    com.netflix.discovery: DEBUG
+    org.springframework.cloud.gateway: TRACE
+    reactor.netty: DEBUG

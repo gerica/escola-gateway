@@ -11,8 +11,8 @@
 
 # --- CONFIGURAÇÃO DO PROJETO ---
 # Configurações fixas para o serviço 'api-gateway'
-SERVICE_NAME="api-gateway"
-CONTAINER_NAME="api-gateway"
+SERVICE_NAME="gateway"
+CONTAINER_NAME="gateway"
 
 # --- Cores para o Output ---
 GREEN='\033[0;32m'
