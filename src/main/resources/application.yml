@@ -18,28 +18,28 @@ spring:
       server:
         webflux:
           routes:
-            - id: auth-service-graphql
+            - id: auth-service
               uri: lb://AUTH-SERVICE
               predicates:
                 - Path=/graphql
               metadata:
                 graphql-subgraph: true
-            - id: auth-service-internal
-              uri: lb://AUTH-SERVICE
+              filters:
+                - AddRequestHeader=X-Internal-Request, true
+
+            - id: client-service
+              uri: lb://CLIENT-SERVICE
               predicates:
-                - Path=/internal/auth/**
-            - id: graphiql
-              uri: no://op
+                - Path=/internal/client/**
+              metadata:
+                graphql-subgraph: true
+
+            - id: graphql-federation
+              uri: no://op  # O próprio gateway trata a federação
               predicates:
-                - Path=/graphiql
-  #            - id: client-service
-  #              uri: lb://CLIENT-SERVICE
-  #              predicates:
-  #                - Path=/internal/client/** # Caminho interno, nunca exposto ao cliente
-  #              metadata:
-  #                graphql-subgraph: true
-  #      handler-mapping:
-  #        order: 2
+                - Path=/graphql
+              filters:
+                - name: GraphQLFederationFilter
 
   # Bloco de configuração do GraphQL CORRIGIDO
   graphql:
