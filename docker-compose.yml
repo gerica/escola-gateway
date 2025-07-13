@@ -21,33 +21,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Serviço do Eureka Server
-#  eureka-server:
-#    # Aponta para a pasta do projeto Eureka para construir a imagem
-#    build:
-#      context: ../eureka-server
-#      dockerfile: ./Dockerfile
-#    container_name: eureka-server
-#    ports:
-#      - "8761:8761"
-#      - "5005:5005" # Porta de debug
-#    networks:
-#      - escola-network # Garante que ele entre na nossa rede customizada
-#    volumes:
-#      # Mapeia o diretório atual (raiz do projeto) para /app
-#      - ../eureka-server/.:/app
-#    # A diretiva 'env_file' diz explicitamente para carregar as variáveis deste arquivo.
-#    env_file:
-#      - ../eureka-server/.env
-##    environment:
-##      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
-#    healthcheck:
-#      # Comando que o Docker vai rodar dentro do container para checar a saúde
-#      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
-#      interval: 60s  # Checar a cada 60 segundos
-#      timeout: 5s    # Esperar no máximo 10 segundos pela resposta
-#      retries: 10     # Tentar 20 vezes antes de marcar como "unhealthy"
-
   # Gatway da aplicacao
   gateway:
     build:
@@ -57,18 +30,13 @@ services:
     depends_on:
       db:
         condition: service_started
-#      eureka-server:
-#        condition: service_healthy
-
     ports:
-      - "8080:8080"
-      - "5006:5006"
+      - "${CLIENT_SERVICE_PORT}:${CLIENT_SERVICE_PORT}"
+      - "${CLIENT_SERVICE_DEBUG_PORT}:${CLIENT_SERVICE_DEBUG_PORT}"
     volumes:
       - .:/app
     env_file:
       - ./.env
-#    environment:
-#      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006
     networks:
       - escola-network
 

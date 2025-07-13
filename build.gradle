@@ -1,55 +1,63 @@
 plugins {
     id 'java'
-	id 'org.springframework.boot' version '3.5.4-SNAPSHOT'
-	id 'io.spring.dependency-management' version '1.1.7'
+    // 👇 MUDANÇA: Usando a versão estável mais recente do Spring Boot
+    id 'org.springframework.boot' version '3.3.1'
+    // 👇 MUDANÇA: Usando a versão do plugin compatível com o Boot 3.3.1
+    id 'io.spring.dependency-management' version '1.1.5'
 }
 
 group = 'com.escola.gateway'
 version = '0.0.1-SNAPSHOT'
 
+// 👇 MUDANÇA: Repositório snapshot não é mais necessário com versões estáveis
 repositories {
     mavenCentral()
-     maven { url = 'https://repo.spring.io/snapshot' }
 }
 
 ext {
-	set('springCloudVersion', "2025.0.0")
+    // 👇 MUDANÇA: Usando a versão estável correspondente do Spring Cloud (Jubilee)
+    set('springCloudVersion', "2023.0.2")
     mapstructVersion = "1.5.5.Final"
 }
 
-// Adicione este bloco ao seu build.gradle
 springBoot {
     buildInfo()
 }
 
 dependencies {
-    // Dependências principais da aplicação
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.cloud:spring-cloud-starter-gateway-server-webflux'
-    implementation 'org.springframework.boot:spring-boot-starter-graphql'
+    // --- Dependências do Gateway e Cloud ---
+    // 👇 MUDANÇA: Esta é a dependência correta e estável para o Gateway
+    implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+     implementation 'org.springframework.boot:spring-boot-starter-graphql'
 
-
-    // Dependências para reduzir boilerplate (Lombok e MapStruct)
+    // --- Ferramentas de Desenvolvimento ---
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     implementation "org.mapstruct:mapstruct:${mapstructVersion}"
     annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
-    // FIX: Removed duplicate 'annotationProcessor' for lombok
 
-    // Dependências de teste
+    // --- Testes ---
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.graphql:spring-graphql-test'
+    // 👇 REMOVIDO: Não é mais necessário
+    // testImplementation 'org.springframework.graphql:spring-graphql-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 dependencyManagement {
     imports {
-        // This BOM manages core Spring Cloud components (Gateway, etc.)
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+bootRun {
+    // Verifica se a propriedade 'debug' foi passada na linha de comando (ex: ./gradlew bootRun -Pdebug)
+    if (project.hasProperty('debug')) {
+        jvmArgs = ['-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005']
     }
 }
 

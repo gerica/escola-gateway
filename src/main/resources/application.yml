@@ -2,86 +2,56 @@ app:
   description: Sistema de Gestão Escolar
 
 server:
-  port: 8080
+  port: ${CLIENT_SERVICE_PORT:8080} # Uma nova porta para este serviço
 
-# Nome da aplicação, importante para o Service Discovery (Eureka)
 spring:
   application:
-    name: federated-gateway
+    name: ${SPRING_APPLICATION_NAME}
   main:
     web-application-type: reactive
-  # --- CONFIGURAÇÃO DO GATEWAY ---
   cloud:
-    loadbalancer:
-      enabled: true
     gateway:
-      server:
-        webflux:
-          routes:
-            - id: auth-service
-              uri: lb://AUTH-SERVICE
-              predicates:
-                - Path=/graphql
-              metadata:
-                graphql-subgraph: true
-              filters:
-                - AddRequestHeader=X-Internal-Request, true
-
-            - id: client-service
-              uri: lb://CLIENT-SERVICE
-              predicates:
-                - Path=/internal/client/**
-              metadata:
-                graphql-subgraph: true
-
-            - id: graphql-federation
-              uri: no://op  # O próprio gateway trata a federação
-              predicates:
-                - Path=/graphql
-              filters:
-                - name: GraphQLFederationFilter
-
-  # Bloco de configuração do GraphQL CORRIGIDO
-  graphql:
-    http:
-      path: /graphql
-    graphiql:
-      enabled: true
-      path: /graphiql
-    federation:
-      enabled: true
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: auth-service-route
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/auth/**
+          filters:
+            # Remove o prefixo /auth antes de encaminhar a requisição para o microserviço.
+            # Ex: /auth/graphql -> /graphql
+            - RewritePath=/auth/(?<segment>.*), /$\{segment}
+        - id: client-service-route
+          uri: lb://CLIENT-SERVICE
+          predicates:
+            - Path=/clients/**
+          filters:
+            # Remove o prefixo /clients antes de encaminhar a requisição.
+            # Ex: /clients/123 -> /123
+            - RewritePath=/clients/(?<segment>.*), /$\{segment}
 
 # Configuração do cliente Eureka. O Gateway precisa saber onde o servidor Eureka está.
 eureka:
   client:
     service-url:
-      # URL padrão do servidor Eureka. Você precisará de um serviço Eureka rodando.
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
-    # Tenta se registrar a cada 5 segundos até conseguir
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka}
     lease-renewal-interval-in-seconds: 5
-    # Se não conseguir renovar em 15s, o servidor pode removê-lo
     lease-expiration-duration-in-seconds: 15
-    # Busca o registro de outros serviços a cada 10 segundos
     registry-fetch-interval-seconds: 10
   instance:
     hostname: gateway
     prefer-ip-address: true
 
-# No final do seu application.yml
 management:
   endpoints:
     web:
       exposure:
-        # Expõe o endpoint 'mappings' para que possamos ver todas as rotas
-        include: mappings
-
+        include: gateway,health,info,mappings
 
 logging:
   level:
-    org.springframework.graphql: DEBUG
-    org.springframework.security: DEBUG
-    org.springframework.web.reactive: DEBUG
-    org.springframework.cloud.loadbalancer: DEBUG
-    com.netflix.discovery: DEBUG
-    org.springframework.cloud.gateway: TRACE
-    reactor.netty: DEBUG
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: INFO
+    reactor.netty.http.client: INFO

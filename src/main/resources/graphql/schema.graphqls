@@ -1,0 +1,13 @@
+# Schema para o próprio API Gateway
+
+# Define o tipo de resposta para o status do gateway
+type GatewayStatus {
+    status: String!
+    activeRoutes: [String]!
+}
+
+# Define as queries que o Gateway pode responder
+type Query {
+    # Retorna o status atual do Gateway
+    gatewayStatus: GatewayStatus
+}

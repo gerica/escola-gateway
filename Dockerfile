@@ -7,14 +7,11 @@ COPY . .
 
 # Make the Gradle wrapper executable
 RUN chmod +x ./gradlew
+RUN chmod +x ./entrypoint.sh
 
 # Expose the application port and the remote debug port
-EXPOSE 8080
-EXPOSE 5005
+EXPOSE ${CLIENT_SERVICE_PORT}
+EXPOSE ${CLIENT_SERVICE_DEBUG_PORT}
 
-# Usamos um script de entrada para manter a lógica de depuração limpa.
-# Isso também lida melhor com sinais (ex: Ctrl+C) do que usar "sh -c".
-ENTRYPOINT [ "/bin/sh", "-c" ]
-
-# O comando a ser executado. O printenv continua sendo uma ótima ideia para depuração.
-CMD ["echo '--- Variáveis de Ambiente do Container ---' && printenv && echo '--- Iniciando a Aplicação ---' && ./gradlew bootRun -t --no-daemon"]
+# Define nosso script como o ponto de entrada do contêiner
+ENTRYPOINT ["./entrypoint.sh"]
