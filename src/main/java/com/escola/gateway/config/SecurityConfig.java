@@ -28,7 +28,12 @@ public class SecurityConfig {
                         // CORREÇÃO: Permite acesso público a TODAS as rotas do serviço de autenticação.
                         // O 'auth-service' é responsável por sua própria segurança interna.
                         // Isso libera caminhos como /auth/graphql e /auth/graphiql.
-                        .pathMatchers("/auth/**").permitAll()
+                        .pathMatchers("/auth/**",
+                                "/clients/**",
+                                "/graphql",
+                                "/graphiql",
+                                "/",
+                                "/error").permitAll()
 
                         // SUGESTÃO: Libere também endpoints de documentação da API, se você os usar.
                         .pathMatchers("/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll()

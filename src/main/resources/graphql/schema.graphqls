@@ -1,4 +1,11 @@
-# Schema para o próprio API Gateway
+scalar DateTime
+
+type AppConfigResponse{
+    name: String
+    description: String
+    version: String
+    time: DateTime
+}
 
 # Define o tipo de resposta para o status do gateway
 type GatewayStatus {
@@ -10,4 +17,5 @@ type GatewayStatus {
 type Query {
     # Retorna o status atual do Gateway
     gatewayStatus: GatewayStatus
+    getAppConfig: AppConfigResponse!
 }
