@@ -29,6 +29,18 @@ spring:
             - Path=/clients/**
           filters:
             - RewritePath=/clients/(?<segment>.*), /$\{segment}
+        - id: util-service-route
+          uri: lb://UTIL-SERVICE
+          predicates:
+            - Path=/utils/**
+          filters:
+            - RewritePath=/utils/(?<segment>.*), /$\{segment}
+        - id: admin-service-route
+          uri: lb://ADMIN-SERVICE
+          predicates:
+            - Path=/admin/**
+          filters:
+            - RewritePath=/admin/(?<segment>.*), /$\{segment}
 
 # Configuração do cliente Eureka. O Gateway precisa saber onde o servidor Eureka está.
 eureka:

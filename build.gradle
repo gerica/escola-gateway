@@ -67,3 +67,51 @@ bootRun {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+// --- Tasks para Gerenciamento do Docker Compose ---
+
+/**
+ * Para e remove os contêineres, redes e volumes definidos no docker-compose.yml.
+ * Equivalente a: docker compose down
+ */
+tasks.register('dockerComposeDown', Exec) {
+    group = 'Docker'
+    description = 'Para e remove os contêineres do Docker Compose.'
+    commandLine 'docker', 'compose', 'down'
+}
+
+/**
+ * Executa 'docker compose down' e depois 'docker compose up -d --build'.
+ * É a task principal para reiniciar todo o ambiente.
+ */
+tasks.register('dockerComposeRestart', Exec) {
+    group = 'Docker'
+    description = 'Reinicia o ambiente Docker Compose, forçando a reconstrução das imagens.'
+
+    // Garante que a task 'dockerComposeDown' seja executada sempre antes desta.
+    // A referência pelo nome da task funciona perfeitamente com o registro lazy.
+    dependsOn 'dockerComposeDown'
+
+    // Define o comando a ser executado.
+    commandLine 'docker', 'compose', 'up', '-d', '--build'
+
+    // Garante que a task sempre execute, ignorando o cache "UP-TO-DATE" do Gradle.
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('dockerComposeReload', Exec) {
+    group = 'Docker'
+    description = 'Reinicia um serviço específico ou todos os serviços. Ex: ./gradlew dockerComposeReload -Pservice=auth-service'
+
+    outputs.upToDateWhen { false }
+
+    doFirst {
+        def command = ['docker', 'compose', 'restart']
+        // Se a propriedade 'service' foi fornecida, adicione-a ao comando
+        if (project.hasProperty('service')) {
+            command.add(project.property('service'))
+        }
+        // Define a linha de comando final
+        commandLine command
+    }
+}

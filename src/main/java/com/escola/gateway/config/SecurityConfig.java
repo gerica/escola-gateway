@@ -10,11 +10,23 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
+
+    private static final List<String> PUBLIC_URLS = Arrays.asList(
+            "/auth/**",
+            "/admin/**",
+            "/clients/**",
+            "/utils/**",
+            "/graphql",
+            "/graphiql",
+            "/",
+            "/error"
+    );
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
@@ -25,26 +37,10 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 // Define as regras de autorização de acesso
                 .authorizeExchange(exchange -> exchange
-                        // CORREÇÃO: Permite acesso público a TODAS as rotas do serviço de autenticação.
-                        // O 'auth-service' é responsável por sua própria segurança interna.
-                        // Isso libera caminhos como /auth/graphql e /auth/graphiql.
-                        .pathMatchers("/auth/**",
-                                "/clients/**",
-                                "/graphql",
-                                "/graphiql",
-                                "/",
-                                "/error").permitAll()
-
-                        // SUGESTÃO: Libere também endpoints de documentação da API, se você os usar.
+                        .pathMatchers(PUBLIC_URLS.toArray(String[]::new)).permitAll()
                         .pathMatchers("/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
-
-                        // Exige autenticação para qualquer outra requisição que não foi liberada acima.
-                        // É por causa desta linha que o formLogin aparece se você tentar
-                        // acessar, por exemplo, /clients/** sem estar logado.
                         .anyExchange().authenticated()
                 )
-                // Habilita um formulário de login básico.
-                // Em um sistema real, isso será substituído por um filtro de validação de token JWT.
                 .formLogin(Customizer.withDefaults());
 
         return http.build();
